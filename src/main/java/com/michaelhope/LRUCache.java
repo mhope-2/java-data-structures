@@ -1,23 +1,39 @@
 package com.michaelhope;
 
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-public class LRUCache<K, V> extends LinkedHashMap<K, V> {
+public class LRUCache<K, V> {
 
     private final int capacity;
+    private final Map<K, V> cache;
 
     public LRUCache(int capacity) {
-        // 0.75f is used because 0.75 is the default load factor chosen for HashMap/LinkedHashMap
-        // as a trade-off between memory usage and lookup performance.
-        super(capacity, 0.75f, true); // true = access order
         this.capacity = capacity;
+
+        this.cache = Collections.synchronizedMap(
+                new LinkedHashMap<K, V>(capacity, 0.75f, true) {
+
+                    @Override
+                    protected boolean removeEldestEntry(
+                            Map.Entry<K, V> eldest) {
+                        return size() > capacity;
+                    }
+                }
+        );
     }
 
-    @Override
-    protected boolean removeEldestEntry(Map.Entry<K, V> eldest) {
-        // size() is an instance method inherited from LinkedHashMap
-        return size() > capacity;
+    public V get(K key) {
+        return cache.get(key);
+    }
+
+    public void put(K key, V value) {
+        cache.put(key, value);
+    }
+
+    public int size() {
+        return cache.size();
     }
 
     public static void main(String[] args) {
@@ -37,4 +53,4 @@ public class LRUCache<K, V> extends LinkedHashMap<K, V> {
         System.out.println(cache);
         // {3=C, 1=A, 4=D}
     }
-}
+} // use Caffeine cache lib in production
